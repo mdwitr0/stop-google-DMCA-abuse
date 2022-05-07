@@ -4,9 +4,10 @@ import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { OauthModule } from './oauth/oauth.module';
 import { getConfigModuleOptions } from 'src/common/configs/config-module.config';
+import { GmailModule } from './gmail/gmail.module';
 
 @Module({
-  imports: [OauthModule, ConfigModule.forRoot(getConfigModuleOptions())],
+  imports: [OauthModule, ConfigModule.forRoot(getConfigModuleOptions()), GmailModule],
   controllers: [AppController],
   providers: [AppService],
 })
