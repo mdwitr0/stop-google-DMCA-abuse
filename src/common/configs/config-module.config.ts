@@ -11,6 +11,7 @@ export const getConfigModuleOptions = (): ConfigModuleOptions => ({
     SERVER_HOST: Joi.string().default('0.0.0.0'),
 
     CLIENT_ID: Joi.string().required(),
-    SERVER_ID: Joi.string().required(),
+    CLIENT_SECRET: Joi.string().required(),
+    HOST_URL: Joi.string().required(),
   }),
 });
