@@ -19,12 +19,16 @@ export class OauthService {
       this.configService.get('CLIENT_SECRET'),
       redirectUri,
     );
-    const tokens = fs.readFileSync('oauth2.keys.json', 'utf8');
-    const tokenJson = JSON.parse(tokens);
-    if (tokens) {
-      this.oauth2Client.setCredentials(tokenJson);
-      this.logger.log(`Success set credentials: oauth2.keys.json`);
-    } else {
+    try {
+      const tokens = fs.readFileSync('oauth2.keys.json', 'utf8');
+      const tokenJson = JSON.parse(tokens);
+      if (tokens) {
+        this.oauth2Client.setCredentials(tokenJson);
+        this.logger.log(`Success set credentials: oauth2.keys.json`);
+      } else {
+        this.logger.warn(`Not fount: oauth2.keys.json`);
+      }
+    } catch (error) {
       this.logger.warn(`Not fount: oauth2.keys.json`);
     }
   }
@@ -51,7 +55,7 @@ export class OauthService {
     fs.writeFileSync('oauth2.keys.json', JSON.stringify(tokens), 'utf-8');
   }
 
-  get credentials() {
-    return this.oauth2Client.credentials;
+  get client() {
+    return this.oauth2Client;
   }
 }

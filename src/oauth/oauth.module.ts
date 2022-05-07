@@ -5,5 +5,6 @@ import { OauthService } from './oauth.service';
 @Module({
   providers: [OauthService],
   controllers: [OauthController],
+  exports: [OauthService],
 })
 export class OauthModule {}
