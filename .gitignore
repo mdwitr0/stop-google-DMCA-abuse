@@ -1,4 +1,5 @@
 .env
+oauth2.keys.json
 # compiled output
 /dist
 /node_modules
