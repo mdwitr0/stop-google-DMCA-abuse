@@ -25,7 +25,8 @@
     "@nestjs/config": "^2.0.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
-    "cz-emoji-conventional": "^1.0.1",
+    "@nestjs/mongoose": "^9.0.3",
+    "mongoose": "^6.2.10",
     "googleapis": "^100.0.0",
     "joi": "^17.6.0",
     "puppeteer": "^14.1.0",
@@ -43,6 +44,7 @@
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
+    "@types/mongoose": "^5.11.97",
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
@@ -54,7 +56,8 @@
     "ts-loader": "^9.2.3",
     "ts-node": "^10.0.0",
     "tsconfig-paths": "^3.10.1",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "cz-emoji-conventional": "^1.0.1"
   },
   "jest": {
     "moduleFileExtensions": [
