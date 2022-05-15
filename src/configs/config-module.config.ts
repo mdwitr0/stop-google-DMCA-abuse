@@ -21,5 +21,16 @@ export const getConfigModuleOptions = (): ConfigModuleOptions => ({
     MONGO_USER: Joi.string(),
     MONGO_PASS: Joi.string(),
     MONGO_AUTHSOURCE: Joi.string(),
+
+    COUNTRY_NAME: Joi.string().required(),
+    FULL_NAME: Joi.string().required(),
+    YOUR_TITLE: Joi.string().required(),
+    COMPANY_NAME: Joi.string(),
+    CONTACT_EMAIL_NOPREFILL: Joi.string().required(),
+    ADDRESS: Joi.string().required(),
+    PHONE: Joi.string().required(),
+    REASON: Joi.string().required(),
+    DMCA_CLARIFICATIONS: Joi.string().required(),
+    SIGNATURE: Joi.string().required(),
   }),
 });
