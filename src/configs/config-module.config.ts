@@ -14,13 +14,9 @@ export const getConfigModuleOptions = (): ConfigModuleOptions => ({
     CLIENT_SECRET: Joi.string().required(),
     HOST_URL: Joi.string().required(),
 
-    MONGO_URI: Joi.string(),
-    MONGO_HOST: Joi.string().default('0.0.0.0'),
-    MONGO_PORT: Joi.number().default(27017),
-    MONGO_DB_NAME: Joi.string(),
-    MONGO_USER: Joi.string(),
-    MONGO_PASS: Joi.string(),
-    MONGO_AUTHSOURCE: Joi.string(),
+    DATABASE_URL: Joi.string().required(),
+
+    LEGAL_EMAIL_ADDRESS: 'sc-noreply@google.com',
 
     COUNTRY_NAME: Joi.string().required(),
     FULL_NAME: Joi.string().required(),
