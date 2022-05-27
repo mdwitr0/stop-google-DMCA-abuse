@@ -10,6 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MessageStatus {
+  SUCCESS
+  FAIL
+  SAVED
+}
+
 model Setting {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   key       String   @unique
@@ -19,4 +25,11 @@ model Setting {
   expireAt  DateTime
 
   @@index([expireAt(expireAfterSeconds: 0)])
+}
+
+model Messages {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  messageId String        @unique
+  text      String
+  status    MessageStatus @default(SAVED)
 }
