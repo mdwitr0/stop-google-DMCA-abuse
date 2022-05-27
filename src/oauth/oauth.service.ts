@@ -1,37 +1,22 @@
 import * as fs from 'fs';
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'googleapis-common';
+import { OAuthKeys } from 'src/oauth/oauth.enum';
+import { SettingService } from 'src/setting/setting.service';
 import { google } from 'googleapis';
 
 @Injectable()
-export class OauthService {
+export class OauthService implements OnModuleInit {
   private logger = new Logger(OauthService.name);
   private oauth2Client: OAuth2Client;
 
-  constructor(private readonly configService: ConfigService) {
-    const redirectUri = this.configService.get('HOST_URL') + '/oauth';
-
-    this.oauth2Client = new google.auth.OAuth2(
-      this.configService.get('CLIENT_ID'),
-      this.configService.get('CLIENT_SECRET'),
-      redirectUri,
-    );
-    try {
-      const tokens = fs.readFileSync('oauth2.keys.json', 'utf8');
-      const tokenJson = JSON.parse(tokens);
-      if (tokens) {
-        this.oauth2Client.setCredentials(tokenJson);
-        this.logger.log(`Success set credentials: oauth2.keys.json`);
-      } else {
-        this.logger.warn(`Not fount: oauth2.keys.json`);
-      }
-    } catch (error) {
-      this.logger.warn(`Not fount: oauth2.keys.json`);
-    }
-  }
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly settingService: SettingService,
+  ) {}
 
   setTokens() {
     this.logger.log('Set tokens.');
@@ -52,10 +37,32 @@ export class OauthService {
   async callback(code: string) {
     const { tokens } = await this.oauth2Client.getToken(code);
     this.oauth2Client.setCredentials(tokens);
-    fs.writeFileSync('oauth2.keys.json', JSON.stringify(tokens), 'utf-8');
+    await this.settingService.set(OAuthKeys.TOKENS, tokens, tokens.expiry_date);
   }
 
   get client() {
     return this.oauth2Client;
+  }
+
+  async onModuleInit() {
+    const redirectUri = this.configService.get('HOST_URL') + '/oauth';
+
+    this.oauth2Client = new google.auth.OAuth2(
+      this.configService.get('CLIENT_ID'),
+      this.configService.get('CLIENT_SECRET'),
+      redirectUri,
+    );
+    try {
+      const tokens = await this.settingService.get(OAuthKeys.TOKENS);
+      const tokenJson: any = tokens.value;
+      if (tokens) {
+        this.oauth2Client.setCredentials(tokenJson);
+        this.logger.log(`Success set credentials: oauth2.keys.json`);
+      } else {
+        this.logger.warn(`Not fount: oauth2.keys.json`);
+      }
+    } catch (error) {
+      this.logger.warn(`Not fount: oauth2.keys.json`);
+    }
   }
 }
