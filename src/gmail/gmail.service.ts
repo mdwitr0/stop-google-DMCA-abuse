@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { MessageStatus, Messages } from '@prisma/client';
 import { gmail_v1, google } from 'googleapis';
 
 import { ConfigService } from '@nestjs/config';
-import { GaxiosPromise } from 'googleapis-common';
 import { OauthService } from 'src/oauth/oauth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StatusEnum } from 'src/common/enums/status';
@@ -105,6 +105,35 @@ export class GmailService {
 
     this.logger.log(`Finish: all messages are saved`);
 
+    return { status: StatusEnum.SUCCESS };
+  }
+
+  async findAll(
+    status: MessageStatus,
+    page: number,
+    take = 50,
+  ): Promise<Messages[]> {
+    return this.prisma.messages.findMany({
+      where: {
+        status,
+      },
+      take,
+      skip: take * page,
+    });
+  }
+
+  async updateMessagesStatus(
+    ids: string[],
+    status: MessageStatus,
+  ): Promise<{ status: StatusEnum }> {
+    await this.prisma.messages.updateMany({
+      where: {
+        id: { in: ids },
+      },
+      data: {
+        status,
+      },
+    });
     return { status: StatusEnum.SUCCESS };
   }
 }
