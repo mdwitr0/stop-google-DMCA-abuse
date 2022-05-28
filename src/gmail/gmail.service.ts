@@ -1,13 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { gmail_v1, google } from 'googleapis';
 
 import { ConfigService } from '@nestjs/config';
+import { GaxiosPromise } from 'googleapis-common';
 import { OauthService } from 'src/oauth/oauth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { google } from 'googleapis';
+import { StatusEnum } from 'src/common/enums/status';
 
 @Injectable()
 export class GmailService {
   private readonly logger = new Logger();
+
+  private maxResults = 100;
+  private userId = 'me';
+
+  private lumenDbRegexp = /lumendatabase\.org/;
+  private domain: string = this.configService.get('DOMAIN');
+  private domainRegexp = RegExp(`http.*\/\/${this.domain}\/.*[^]`, 'g');
+
+  private gmail: gmail_v1.Gmail = google.gmail({
+    version: 'v1',
+    auth: this.oauthService.client,
+  });
 
   constructor(
     private readonly configService: ConfigService,
@@ -15,25 +29,44 @@ export class GmailService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async findAndSaveMessages(q: string, nextPageToken?: string): Promise<any> {
+  async getEmails(
+    q: string,
+    pageToken: string,
+  ): Promise<gmail_v1.Schema$ListMessagesResponse> {
+    const response = await this.gmail.users.messages.list({
+      userId: this.userId,
+      maxResults: this.maxResults,
+      q,
+      pageToken,
+    });
+
+    return response.data;
+  }
+
+  async getMessage(id: string): Promise<string> {
+    const message = await this.gmail.users.messages.get({
+      userId: this.userId,
+      id,
+    });
+
+    return Buffer.from(
+      message.data.payload.parts[0].body.data,
+      'base64',
+    ).toString();
+  }
+
+  async findAndSaveMessages(
+    q: string,
+    nextPageToken?: string,
+  ): Promise<{ status: StatusEnum }> {
     this.logger.log(`Run: set messages`);
 
-    const gmail = google.gmail({
-      version: 'v1',
-      auth: this.oauthService.client,
-    });
-    const list = await gmail.users.messages.list({
-      userId: 'me',
-      q,
-      maxResults: 100,
-      pageToken: nextPageToken,
-    });
-
+    const list = await this.getEmails(q, nextPageToken);
     this.logger.log(
-      `Process: ${list.data.messages.length} messages found in the list`,
+      `Process: ${list.messages.length} messages found in the list`,
     );
 
-    for (const messageData of list.data.messages) {
+    for (const messageData of list.messages) {
       const savedMessage = await this.prisma.messages.findUnique({
         where: { messageId: messageData.id },
       });
@@ -43,25 +76,14 @@ export class GmailService {
       } else {
         this.logger.debug(`Get message: ${messageData.id}`);
 
-        const message = await gmail.users.messages.get({
-          userId: 'me',
-          id: messageData.id,
-        });
+        const message = await this.getMessage(messageData.id);
 
-        const messageText = Buffer.from(
-          message.data.payload.parts[0].body.data,
-          'base64',
-        ).toString();
-
-        const domain = this.configService.get('DOMAIN');
-        const links = messageText.match(
-          RegExp(`http.*\/\/${domain}\/.*[^]`, 'g'),
-        );
-        const isAbuse = /lumendatabase\.org/.test(messageText);
+        const links = message.match(this.domainRegexp);
+        const isAbuse = this.lumenDbRegexp.test(message);
         if (isAbuse && links?.length) {
           const data = {
-            messageId: message.data.id,
-            url: links[1],
+            messageId: messageData.id,
+            url: links[1].trim(),
           };
 
           await this.prisma.messages.create({
@@ -77,11 +99,10 @@ export class GmailService {
       }
     }
 
-    if (list.data.nextPageToken)
-      this.findAndSaveMessages(q, list.data.nextPageToken);
+    if (list.nextPageToken) this.findAndSaveMessages(q, list.nextPageToken);
 
     this.logger.log(`Finish: all messages are saved`);
 
-    return { status: 'success' };
+    return { status: StatusEnum.SUCCESS };
   }
 }
