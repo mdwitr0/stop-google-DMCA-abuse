@@ -15,11 +15,16 @@ export class LegalHandleModule implements OnApplicationBootstrap {
   constructor(private readonly legalHandleService: LegalHandleService) {}
 
   async onApplicationBootstrap() {
-    this.legalHandleService.messageUpdate();
+    this.messageUpdate();
   }
 
   @Cron(CronExpression.EVERY_5_HOURS)
   async messageUpdate() {
     this.legalHandleService.messageUpdate();
+  }
+
+  @Cron(CronExpression.EVERY_12_HOURS)
+  async cancelAbuse() {
+    this.legalHandleService.cancelAbuse();
   }
 }
