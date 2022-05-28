@@ -1,5 +1,8 @@
-# Anti DMCA bot
+# Anti Google DMCA bot
 
+Copyright holders often abuse the DMCA on Google. Every day dozens of pages are removed from the search. 
+
+I'm not violating their rights, and that's why I decided to write a bot that will appeal. Within 10 days after the request, the pages must be restored in the search
 
 ## .env file example
 ```bash
