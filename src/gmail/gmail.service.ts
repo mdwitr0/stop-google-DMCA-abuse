@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { ConfigService } from '@nestjs/config';
 import { OauthService } from 'src/oauth/oauth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { google } from 'googleapis';
@@ -9,6 +10,7 @@ export class GmailService {
   private readonly logger = new Logger();
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly oauthService: OauthService,
     private readonly prisma: PrismaService,
   ) {}
@@ -51,16 +53,27 @@ export class GmailService {
           'base64',
         ).toString();
 
-        const data = {
-          messageId: message.data.id,
-          text: messageText,
-        };
+        const domain = this.configService.get('DOMAIN');
+        const links = messageText.match(
+          RegExp(`http.*\/\/${domain}\/.*[^]`, 'g'),
+        );
+        const isAbuse = /lumendatabase\.org/.test(messageText);
+        if (isAbuse && links?.length) {
+          const data = {
+            messageId: message.data.id,
+            url: links[1],
+          };
 
-        await this.prisma.messages.create({
-          data,
-        });
+          await this.prisma.messages.create({
+            data,
+          });
 
-        this.logger.debug(`Save message: ${messageData.id}`);
+          this.logger.debug(`Save message: ${messageData.id}`);
+        } else {
+          this.logger.debug(
+            `Skip message: ${messageData.id}, It doesn't meet the criteria`,
+          );
+        }
       }
     }
 

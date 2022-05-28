@@ -30,6 +30,6 @@ model Setting {
 model Messages {
   id        String        @id @default(auto()) @map("_id") @db.ObjectId
   messageId String        @unique
-  text      String
+  url       String
   status    MessageStatus @default(SAVED)
 }
