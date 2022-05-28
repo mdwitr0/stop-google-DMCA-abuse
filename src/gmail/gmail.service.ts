@@ -18,16 +18,18 @@ export class GmailService {
   private domain: string = this.configService.get('DOMAIN');
   private domainRegexp = RegExp(`http.*\/\/${this.domain}\/.*[^]`, 'g');
 
-  private gmail: gmail_v1.Gmail = google.gmail({
-    version: 'v1',
-    auth: this.oauthService.client,
-  });
-
   constructor(
     private readonly configService: ConfigService,
     private readonly oauthService: OauthService,
     private readonly prisma: PrismaService,
   ) {}
+
+  get gmail(): gmail_v1.Gmail {
+    return google.gmail({
+      version: 'v1',
+      auth: this.oauthService.client,
+    });
+  }
 
   async getEmails(
     q: string,
