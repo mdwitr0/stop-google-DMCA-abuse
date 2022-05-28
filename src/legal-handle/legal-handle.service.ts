@@ -21,7 +21,7 @@ export class LegalHandleService {
     );
   }
 
-  async cancelAbuse(page = 1): Promise<void> {
+  async cancelAbuse(page = 0): Promise<void> {
     this.logger.log(`Run: cancel abuse`);
     const messages = await this.gmailService.findAll(MessageStatus.SAVED, page);
 
