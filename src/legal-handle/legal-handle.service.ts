@@ -36,6 +36,6 @@ export class LegalHandleService {
       messages.map((m) => m.id),
       MessageStatus.SUCCESS,
     );
-    return this.cancelAbuse(page + 1);
+    return this.cancelAbuse(page);
   }
 }

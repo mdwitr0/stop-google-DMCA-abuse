@@ -114,11 +114,11 @@ export class GmailService {
     take = 50,
   ): Promise<Messages[]> {
     return this.prisma.messages.findMany({
+      take,
+      skip: take * page,
       where: {
         status,
       },
-      take,
-      skip: take * page,
     });
   }
 
