@@ -1,10 +1,18 @@
 import * as puppeteer from 'puppeteer';
 
+import {
+  ButtonEnum,
+  CheckboxEnum,
+  DivEnum,
+  FieldEnum,
+  OriginatorFieldEnum,
+  RadioButtonEnum,
+  SelectorEnum,
+} from 'src/legal-sender/legal-sender.enum';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { BrowserService } from 'src/browser/browser.service';
 import { ConfigService } from '@nestjs/config';
-import { FieldsEnum } from 'src/common/enums/felds.enum';
 
 @Injectable()
 export class LegalSenderService {
@@ -19,6 +27,54 @@ export class LegalSenderService {
     private readonly browserService: BrowserService,
     private readonly configService: ConfigService,
   ) {}
+
+  async cancelWorker(links: string[]): Promise<{ status: string }> {
+    this.logger.log(`Run: filling out the legal form. Links ${links.length}`);
+
+    const page = await this.browserService.init();
+
+    await page.goto(this.baseURL + this.supportUrlPrefix);
+
+    await page.waitForSelector(DivEnum.COUNTRY);
+    await page.select(
+      SelectorEnum.COUNTRY,
+      this.configService.get('COUNTRY_NAME'),
+    );
+
+    const reasonIndex = Number(this.configService.get('REASON')) - 1;
+    const reasonRadioButtons = await page.$$(RadioButtonEnum.REASON);
+
+    await reasonRadioButtons[reasonIndex].click();
+
+    await this.setOriginatorValues(page);
+
+    await this.setLinksValue(page, links);
+
+    await page.click(CheckboxEnum.CONSENT_1);
+    await page.click(CheckboxEnum.CONSENT_2);
+    await page.waitForTimeout(this.waitTime);
+
+    await page.click(ButtonEnum.SUBMIT);
+    await page.waitForTimeout(this.waitTime);
+
+    await page.waitForSelector(DivEnum.CONFIRMATION);
+    await page.waitForTimeout(this.waitTime * 4);
+    await this.browserService.close();
+    this.logger.log(`Finish: filling out the legal form`);
+    return {
+      status: 'success',
+    };
+  }
+
+  async setOriginatorValues(page: puppeteer.Page): Promise<void> {
+    for (const field in OriginatorFieldEnum) {
+      await this.setFieldValue(
+        page,
+        OriginatorFieldEnum[field],
+        this.configService.get(field),
+      );
+    }
+  }
 
   async setFieldValue(
     page: puppeteer.Page,
@@ -42,7 +98,7 @@ export class LegalSenderService {
       await this.addLinkField(page);
     }
 
-    const linkFields = await page.$$('[name="material_location"]');
+    const linkFields = await page.$$(FieldEnum.LINK);
     for (const [index, link] of linkFields.entries()) {
       await link.click();
       await page.waitForTimeout(this.waitTime);
@@ -54,50 +110,6 @@ export class LegalSenderService {
   }
 
   async addLinkField(page: puppeteer.Page): Promise<void> {
-    await page.click('[class="add-additional"]');
-  }
-
-  async cancelWorker(links: string[]): Promise<{ status: string }> {
-    this.logger.log(`Run: filling out the legal form. Links ${links.length}`);
-
-    const page = await this.browserService.init();
-
-    await page.goto(this.baseURL + this.supportUrlPrefix);
-
-    await page.waitForSelector('[class="sc-select"]');
-    await page.select(
-      '[name="market_residence"]',
-      this.configService.get('COUNTRY_NAME'),
-    );
-
-    const reasonIndex = Number(this.configService.get('REASON')) - 1;
-    const reasonRadioButtons = await page.$$(
-      '[data-frd-context-type="TYPE_UNSPECIFIED"] [aria-labelledby="dmca_clarifications_intro--label"] [class="material-radio__circle"]',
-    );
-
-    await reasonRadioButtons[reasonIndex].click();
-
-    for (const field in FieldsEnum) {
-      await this.setFieldValue(
-        page,
-        `[id="${FieldsEnum[field]}"]`,
-        this.configService.get(field),
-      );
-    }
-
-    await this.setLinksValue(page, links);
-
-    await page.click('[name="consent_statement1"]');
-    await page.click('[name="consent_statement2"]');
-    await page.waitForTimeout(this.waitTime);
-
-    await page.click('.submit-button');
-    await page.waitForTimeout(this.waitTime);
-
-    await this.browserService.close();
-    this.logger.log(`Finish: filling out the legal form`);
-    return {
-      status: 'success',
-    };
+    await page.click(ButtonEnum.ADD_LINK);
   }
 }
