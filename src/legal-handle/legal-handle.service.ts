@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { GmailService } from 'src/gmail/gmail.service';
 import { LegalSenderService } from 'src/legal-sender/legal-sender.service';
 import { MessageStatus } from '@prisma/client';
+import { OAuthKeys } from 'src/oauth/oauth.enum';
+import { SettingService } from 'src/setting/setting.service';
 import { StatusEnum } from 'src/common/enums/status';
 
 @Injectable()
@@ -13,9 +15,21 @@ export class LegalHandleService {
     private readonly gmailService: GmailService,
     private readonly configService: ConfigService,
     private readonly legalSenderService: LegalSenderService,
+    private readonly settingService: SettingService,
   ) {}
 
   async messageUpdate(): Promise<{ status: StatusEnum }> {
+    const keys = await this.settingService.get(OAuthKeys.TOKENS);
+    if (!keys) {
+      this.logger.error(`To get started, you need to log in to google`);
+      this.logger.error(`Please fill in the variables in the .env file`);
+      this.logger.error(
+        `And go to this endpoint: ${this.configService.get(
+          'HOST_URL',
+        )}/oauth/authenticate`,
+      );
+      return { status: StatusEnum.ERROR };
+    }
     return this.gmailService.findAndSaveMessages(
       this.configService.get('LEGAL_EMAIL_ADDRESS'),
     );

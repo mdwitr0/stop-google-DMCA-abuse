@@ -64,39 +64,41 @@ export class GmailService {
     this.logger.log(`Run: set messages`);
 
     const list = await this.getEmails(q, nextPageToken);
-    this.logger.log(
-      `Process: ${list.messages.length} messages found in the list`,
-    );
+    if (list.messages?.length) {
+      this.logger.log(
+        `Process: ${list.messages.length} messages found in the list`,
+      );
 
-    for (const messageData of list.messages) {
-      const savedMessage = await this.prisma.messages.findUnique({
-        where: { messageId: messageData.id },
-      });
+      for (const messageData of list.messages) {
+        const savedMessage = await this.prisma.messages.findUnique({
+          where: { messageId: messageData.id },
+        });
 
-      if (savedMessage) {
-        this.logger.debug(`Found message: ${messageData.id}`);
-      } else {
-        this.logger.debug(`Get message: ${messageData.id}`);
-
-        const message = await this.getMessage(messageData.id);
-
-        const links = message.match(this.domainRegexp);
-        const isAbuse = this.lumenDbRegexp.test(message);
-        if (isAbuse && links?.length) {
-          const data = {
-            messageId: messageData.id,
-            url: links[1].trim(),
-          };
-
-          await this.prisma.messages.create({
-            data,
-          });
-
-          this.logger.debug(`Save message: ${messageData.id}`);
+        if (savedMessage) {
+          this.logger.debug(`Found message: ${messageData.id}`);
         } else {
-          this.logger.debug(
-            `Skip message: ${messageData.id}, It doesn't meet the criteria`,
-          );
+          this.logger.debug(`Get message: ${messageData.id}`);
+
+          const message = await this.getMessage(messageData.id);
+
+          const links = message.match(this.domainRegexp);
+          const isAbuse = this.lumenDbRegexp.test(message);
+          if (isAbuse && links?.length) {
+            const data = {
+              messageId: messageData.id,
+              url: links[1].trim(),
+            };
+
+            await this.prisma.messages.create({
+              data,
+            });
+
+            this.logger.debug(`Save message: ${messageData.id}`);
+          } else {
+            this.logger.debug(
+              `Skip message: ${messageData.id}, It doesn't meet the criteria`,
+            );
+          }
         }
       }
     }

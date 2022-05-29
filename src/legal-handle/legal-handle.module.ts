@@ -5,9 +5,10 @@ import { ConfigModule } from '@nestjs/config';
 import { GmailModule } from 'src/gmail/gmail.module';
 import { LegalHandleService } from './legal-handle.service';
 import { LegalSenderModule } from 'src/legal-sender/legal-sender.module';
+import { SettingModule } from 'src/setting/setting.module';
 
 @Module({
-  imports: [GmailModule, ConfigModule, LegalSenderModule],
+  imports: [GmailModule, ConfigModule, LegalSenderModule, SettingModule],
   providers: [LegalHandleService],
   exports: [LegalHandleService],
 })
