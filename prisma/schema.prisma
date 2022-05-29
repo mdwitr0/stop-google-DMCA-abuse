@@ -32,4 +32,6 @@ model Messages {
   messageId String        @unique
   url       String
   status    MessageStatus @default(SAVED)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
