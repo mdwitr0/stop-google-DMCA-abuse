@@ -10,15 +10,28 @@ export class SettingService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async set(key: string, value: any, ttl: number): Promise<{ status: string }> {
-    const currentDate = DateTime.now();
-
+  async set(
+    key: string,
+    value: any,
+    expire: {
+      second?: number;
+      date?: number;
+    },
+  ): Promise<{ status: string }> {
     try {
       this.logger.debug(`Set key: ${key}`);
-      const updateData = {
+      const updateData: any = {
         value: value,
-        expireAt: currentDate.plus({ second: ttl }).toString(),
       };
+
+      if (expire.second) {
+        const currentDate = DateTime.now();
+        updateData.expireAt = currentDate
+          .plus({ second: expire.second })
+          .toString();
+      } else {
+        updateData.expireAt = new Date(expire.date);
+      }
 
       await this.prisma.setting.upsert({
         where: { key },

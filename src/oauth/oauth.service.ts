@@ -29,6 +29,8 @@ export class OauthService implements OnModuleInit {
       scope: scopes,
     });
 
+    this.logger.verbose(`Please: open the link: ${url}`);
+
     return {
       url,
     };
@@ -37,7 +39,9 @@ export class OauthService implements OnModuleInit {
   async callback(code: string) {
     const { tokens } = await this.oauth2Client.getToken(code);
     this.oauth2Client.setCredentials(tokens);
-    await this.settingService.set(OAuthKeys.TOKENS, tokens, tokens.expiry_date);
+    await this.settingService.set(OAuthKeys.TOKENS, tokens, {
+      date: tokens.expiry_date,
+    });
   }
 
   get client() {
@@ -59,10 +63,10 @@ export class OauthService implements OnModuleInit {
         this.oauth2Client.setCredentials(tokenJson);
         this.logger.log(`Success set credentials: oauth2.keys.json`);
       } else {
-        this.logger.warn(`Not fount: oauth2.keys.json`);
+        this.logger.warn(`Not fount: oauth keys`);
       }
     } catch (error) {
-      this.logger.warn(`Not fount: oauth2.keys.json`);
+      this.logger.warn(`Not fount: oauth keys`);
     }
   }
 }
