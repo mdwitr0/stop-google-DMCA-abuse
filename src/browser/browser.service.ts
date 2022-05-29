@@ -10,19 +10,15 @@ export class BrowserService {
     puppeteer.BrowserConnectOptions & {
       product?: puppeteer.Product;
       extraPrefsFirefox?: Record<string, unknown>;
-    };
-
-  constructor() {
-    this.browserConfig = {
-      headless: false,
-      product: 'chrome',
-      waitForInitialPage: true,
-      defaultViewport: {
-        height: 1080,
-        width: 1920,
-      },
-    };
-  }
+    } = {
+    headless: true,
+    product: 'chrome',
+    waitForInitialPage: true,
+    defaultViewport: {
+      height: 1080,
+      width: 1920,
+    },
+  };
 
   async init(): Promise<puppeteer.Page> {
     this.browser = await puppeteer.launch(this.browserConfig);
