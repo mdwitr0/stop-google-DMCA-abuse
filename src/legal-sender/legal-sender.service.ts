@@ -51,6 +51,7 @@ export class LegalSenderService {
     await this.setLinksValue(page, links);
 
     await page.click(CheckboxEnum.CONSENT_1);
+    await page.waitForTimeout(this.waitTime);
     await page.click(CheckboxEnum.CONSENT_2);
     await page.waitForTimeout(this.waitTime);
 

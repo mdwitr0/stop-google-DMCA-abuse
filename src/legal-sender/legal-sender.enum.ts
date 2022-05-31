@@ -28,7 +28,7 @@ export enum SelectorEnum {
 
 export enum CheckboxEnum {
   CONSENT_1 = '[name="consent_statement1"]',
-  CONSENT_2 = '[name="consent_statement1"]',
+  CONSENT_2 = '[name="consent_statement2"]',
 }
 
 export enum DivEnum {
