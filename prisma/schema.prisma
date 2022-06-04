@@ -19,7 +19,7 @@ enum MessageStatus {
 model Setting {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   key       String   @unique
-  value     Json
+  value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   expireAt  DateTime

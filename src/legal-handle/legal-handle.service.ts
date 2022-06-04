@@ -19,8 +19,9 @@ export class LegalHandleService {
   ) {}
 
   async messageUpdate(): Promise<{ status: StatusEnum }> {
-    const keys = await this.settingService.get(OAuthKeys.TOKENS);
-    if (!keys) {
+    const refreshToken = await this.settingService.get(OAuthKeys.REFRESH_TOKEN);
+    const accessToken = await this.settingService.get(OAuthKeys.ACCESS_TOKEN);
+    if (!refreshToken && !accessToken) {
       this.logger.error(`To get started, you need to log in to google`);
       this.logger.error(`Please fill in the variables in the .env file`);
       this.logger.error(

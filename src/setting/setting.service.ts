@@ -12,7 +12,7 @@ export class SettingService {
 
   async set(
     key: string,
-    value: any,
+    value: string,
     expire: {
       second?: number;
       date?: number;

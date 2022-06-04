@@ -7,6 +7,7 @@ import { OAuth2Client } from 'googleapis-common';
 import { OAuthKeys } from 'src/oauth/oauth.enum';
 import { SettingService } from 'src/setting/setting.service';
 import { google } from 'googleapis';
+import { string } from 'joi';
 
 @Injectable()
 export class OauthService implements OnModuleInit {
@@ -26,6 +27,7 @@ export class OauthService implements OnModuleInit {
 
     const url = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
+      prompt: 'consent',
       scope: scopes,
     });
 
@@ -39,7 +41,18 @@ export class OauthService implements OnModuleInit {
   async callback(code: string) {
     const { tokens } = await this.oauth2Client.getToken(code);
     this.oauth2Client.setCredentials(tokens);
-    await this.settingService.set(OAuthKeys.TOKENS, tokens, {
+
+    if (tokens.refresh_token) {
+      await this.settingService.set(
+        OAuthKeys.REFRESH_TOKEN,
+        tokens.refresh_token,
+        {
+          second: 60 * 60 * 60 * 60,
+        },
+      );
+    }
+
+    await this.settingService.set(OAuthKeys.ACCESS_TOKEN, tokens.access_token, {
       date: tokens.expiry_date,
     });
   }
@@ -57,11 +70,24 @@ export class OauthService implements OnModuleInit {
       redirectUri,
     );
     try {
-      const tokens = await this.settingService.get(OAuthKeys.TOKENS);
-      const tokenJson: any = tokens.value;
-      if (tokens) {
-        this.oauth2Client.setCredentials(tokenJson);
-        this.logger.log(`Success set credentials: oauth2.keys.json`);
+      const refreshTokenObj = await this.settingService.get(
+        OAuthKeys.REFRESH_TOKEN,
+      );
+      const accessTokenObj = await this.settingService.get(
+        OAuthKeys.REFRESH_TOKEN,
+      );
+
+      const credentials: any = {
+        token_type: 'Bearer',
+      };
+      if (accessTokenObj) credentials.access_token = accessTokenObj.value;
+
+      if (refreshTokenObj) credentials.refresh_token = refreshTokenObj.value;
+
+      if (Object.keys(credentials).length) {
+        this.oauth2Client.setCredentials(credentials);
+
+        this.logger.log(`Success set credentials`);
       } else {
         this.logger.warn(`Not fount: oauth keys`);
       }

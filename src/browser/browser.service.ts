@@ -11,7 +11,7 @@ export class BrowserService {
       product?: puppeteer.Product;
       extraPrefsFirefox?: Record<string, unknown>;
     } = {
-    headless: true,
+    headless: false,
     product: 'chrome',
     waitForInitialPage: true,
     defaultViewport: {
