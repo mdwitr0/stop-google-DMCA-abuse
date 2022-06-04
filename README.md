@@ -1,4 +1,4 @@
-# Anti Google DMCA bot
+# Stop Google DMCA abuse. Script
 
 Copyright holders often abuse the DMCA on Google. Every day dozens of pages are removed from the search. 
 
